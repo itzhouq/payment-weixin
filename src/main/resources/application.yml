@@ -1,0 +1,16 @@
+server:
+  port: 8090 # 服务端口
+
+spring:
+  application:
+    name: payment-weixin # 服务名字
+  jackson:
+    date-format: yyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/payment-weixin?characterEncoding=utf-8&serverTimezone=GMT%2B8
+    username: root
+    password: 123456
+
+
