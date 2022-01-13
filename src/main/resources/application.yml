@@ -9,8 +9,18 @@ spring:
     time-zone: GMT+8
 
   datasource:
-    url: jdbc:mysql://localhost:3306/payment-weixin?characterEncoding=utf-8&serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/payment_weixin?serverTimezone=GMT%2B8&characterEncoding=utf-8
     username: root
     password: 123456
+
+mybatis-plus:
+  configuration: #sql日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:cn/itzhouq/payment/weixin/mapper/xml/*.xml
+
+logging:
+  level:
+    root: info
 
 
