@@ -1,6 +1,7 @@
 package cn.itzhouq.payment.weixin.vo;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
  * @date 2022/1/13 21:12
  */
 @Data
+@Accessors(chain = true)
 public class R {
 
     /**
