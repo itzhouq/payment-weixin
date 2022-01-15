@@ -1,4 +1,4 @@
-package com.atguigu.paymentdemo.util;
+package cn.itzhouq.payment.weixin.util;
 
 
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;

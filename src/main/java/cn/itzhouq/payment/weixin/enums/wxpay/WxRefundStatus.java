@@ -1,4 +1,4 @@
-package com.atguigu.paymentdemo.enums.wxpay;
+package cn.itzhouq.payment.weixin.enums.wxpay;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

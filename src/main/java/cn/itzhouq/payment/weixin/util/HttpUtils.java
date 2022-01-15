@@ -1,4 +1,4 @@
-package com.atguigu.paymentdemo.util;
+package cn.itzhouq.payment.weixin.util;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
@@ -9,6 +9,7 @@ public class HttpUtils {
 
     /**
      * 将通知参数转化为字符串
+     *
      * @param request
      * @return
      */

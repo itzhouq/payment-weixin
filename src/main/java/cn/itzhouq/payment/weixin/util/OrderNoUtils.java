@@ -1,4 +1,4 @@
-package com.atguigu.paymentdemo.util;
+package cn.itzhouq.payment.weixin.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,6 +14,7 @@ public class OrderNoUtils {
 
     /**
      * 获取订单编号
+     *
      * @return
      */
     public static String getOrderNo() {
@@ -22,6 +23,7 @@ public class OrderNoUtils {
 
     /**
      * 获取退款单编号
+     *
      * @return
      */
     public static String getRefundNo() {
@@ -30,6 +32,7 @@ public class OrderNoUtils {
 
     /**
      * 获取编号
+     *
      * @return
      */
     public static String getNo() {
