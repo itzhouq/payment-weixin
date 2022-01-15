@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> implements OrderInfoService {
@@ -65,6 +66,18 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfo.setCodeUrl(codeUrl);
 
         baseMapper.update(orderInfo, queryWrapper);
+    }
+
+    /**
+     * @return {@link java.util.List<cn.itzhouq.payment.weixin.entity.OrderInfo>}
+     * @Description 插叙订单列表，并倒序排列
+     * @author itzhouq
+     * @Date 2022/1/15 20:05
+     */
+    @Override
+    public List<OrderInfo> listOrderByCreateTimeDesc() {
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<OrderInfo>().orderByDesc("create_time");
+        return baseMapper.selectList(queryWrapper);
     }
 
     /**
