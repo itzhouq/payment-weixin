@@ -2,8 +2,10 @@ package cn.itzhouq.payment.weixin.controller;
 
 import cn.itzhouq.payment.weixin.service.WxPayService;
 import cn.itzhouq.payment.weixin.util.HttpUtils;
+import cn.itzhouq.payment.weixin.util.WechatPay2ValidatorForRequest;
 import cn.itzhouq.payment.weixin.vo.R;
 import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 支付
@@ -31,6 +32,9 @@ public class WxPayController {
 
     @Resource
     private WxPayService wxPayService;
+
+    @Resource
+    private Verifier verifier;
 
     /**
      * @param productId 商品ID
@@ -76,10 +80,22 @@ public class WxPayController {
             // 处理通知参数
             String body = HttpUtils.readData(request);
             Map<String, Object> bodyMap = gson.fromJson(body, HashMap.class);
-            log.info("支付通知的id ===> {}", bodyMap.get("id"));
+            String requestId = (String) bodyMap.get("id");
+            log.info("支付通知的id ===> {}", requestId);
             log.info("支付通知的完整数据 ===> {}", body);
 
-            // TODO 签名的验证
+            // 签名的验证
+            WechatPay2ValidatorForRequest validator = new WechatPay2ValidatorForRequest(verifier, body, requestId);
+            if (!validator.validate(request)) {
+                log.error("通知验签失败");
+                // 失败应答
+                response.setStatus(500);
+                map.put("code", "ERROR");
+                map.put("message", "通知验签失败");
+                return gson.toJson(map);
+            }
+
+            log.info("通知验签成功");
             // TODO 处理订单
 
             // 测试超时应答：添加睡眠时间使应答超时
