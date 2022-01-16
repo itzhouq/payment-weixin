@@ -9,6 +9,7 @@ import cn.itzhouq.payment.weixin.service.OrderInfoService;
 import cn.itzhouq.payment.weixin.service.WxPayService;
 import cn.itzhouq.payment.weixin.util.OrderNoUtils;
 import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -20,6 +21,8 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +53,7 @@ public class WxPayServiceImpl implements WxPayService {
      * @Date 2022/1/15 11:30
      */
     @Override
-    public Map<String, Object> nativePay(Long productId) throws Exception{
+    public Map<String, Object> nativePay(Long productId) throws Exception {
         log.info("生成订单");
 
         // 生成订单
@@ -120,5 +123,53 @@ public class WxPayServiceImpl implements WxPayService {
         } finally {
             response.close();
         }
+    }
+
+    /**
+     * @param bodyMap 请求体参数
+     * @Description 处理订单
+     * @author itzhouq
+     * @Date 2022/1/16 22:50
+     */
+    @Override
+    public void processOrder(Map<String, Object> bodyMap) {
+        log.info("处理订单");
+
+        String plainText = decryptFromResource(bodyMap);
+
+        // 转换明文
+
+        // 更新订单状态
+
+        // 记录支付日志
+    }
+
+    /**
+     * @param bodyMap 请求体数据
+     * @return {@link java.lang.String}
+     * @Description 密文解密
+     * 支付通知-密文解密：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_5.shtml
+     * @author itzhouq
+     * @Date 2022/1/16 22:54
+     */
+    private String decryptFromResource(Map<String, Object> bodyMap) throws GeneralSecurityException {
+        log.info("密文解密");
+
+        // 通知数据
+        Map<String, String> resourceMap = (Map<String, String>) bodyMap.get("resource");
+        // 数据密文
+        String ciphertext = resourceMap.get("ciphertext");
+        // 随机串
+        String nonce = resourceMap.get("nonce");
+        // 附加数据
+        String associatedData = resourceMap.get("associated_data");
+        log.info("密文 ===> {}", ciphertext);
+        AesUtil aesUtil = new AesUtil(wxPayConfig.getApiV3Key().getBytes(StandardCharsets.UTF_8));
+        String plainText = aesUtil.decryptToString(associatedData.getBytes(StandardCharsets.UTF_8),
+                nonce.getBytes(StandardCharsets.UTF_8),
+                ciphertext);
+        log.info("明文 ===> {}", plainText);
+
+        return plainText;
     }
 }

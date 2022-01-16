@@ -84,7 +84,9 @@ public class WxPayController {
             log.info("支付通知的id ===> {}", requestId);
             log.info("支付通知的完整数据 ===> {}", body);
 
-            // 签名的验证
+            // 签名的验证：
+            // https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_1.shtml
+            // https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_5.shtml
             WechatPay2ValidatorForRequest validator = new WechatPay2ValidatorForRequest(verifier, body, requestId);
             if (!validator.validate(request)) {
                 log.error("通知验签失败");
@@ -96,7 +98,8 @@ public class WxPayController {
             }
 
             log.info("通知验签成功");
-            // TODO 处理订单
+            // TODO 处理订单--密文解密
+            wxPayService.processOrder(bodyMap);
 
             // 测试超时应答：添加睡眠时间使应答超时
             // TimeUnit.SECONDS.sleep(5);
