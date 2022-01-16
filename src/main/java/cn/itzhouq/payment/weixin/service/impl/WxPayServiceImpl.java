@@ -6,8 +6,8 @@ import cn.itzhouq.payment.weixin.enums.OrderStatus;
 import cn.itzhouq.payment.weixin.enums.wxpay.WxApiType;
 import cn.itzhouq.payment.weixin.enums.wxpay.WxNotifyType;
 import cn.itzhouq.payment.weixin.service.OrderInfoService;
+import cn.itzhouq.payment.weixin.service.PaymentInfoService;
 import cn.itzhouq.payment.weixin.service.WxPayService;
-import cn.itzhouq.payment.weixin.util.OrderNoUtils;
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +44,9 @@ public class WxPayServiceImpl implements WxPayService {
 
     @Resource
     private OrderInfoService orderInfoService;
+
+    @Resource
+    private PaymentInfoService paymentInfoService;
 
     /**
      * @param productId 商品ID
@@ -132,16 +135,21 @@ public class WxPayServiceImpl implements WxPayService {
      * @Date 2022/1/16 22:50
      */
     @Override
-    public void processOrder(Map<String, Object> bodyMap) {
+    public void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException {
         log.info("处理订单");
 
         String plainText = decryptFromResource(bodyMap);
 
-        // 转换明文
+        // 转换明文:https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_5.shtml
+        Gson gson = new Gson();
+        Map<String, Object> plainTextMap = gson.fromJson(plainText, HashMap.class);
+        String orderNo = (String) plainTextMap.get("out_trade_no");
 
         // 更新订单状态
+        orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.SUCCESS);
 
         // 记录支付日志
+        paymentInfoService.createPaymentInfo(plainText);
     }
 
     /**

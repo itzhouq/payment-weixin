@@ -10,12 +10,14 @@ import cn.itzhouq.payment.weixin.service.OrderInfoService;
 import cn.itzhouq.payment.weixin.util.OrderNoUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 
 @Service
+@Slf4j
 public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> implements OrderInfoService {
     @Resource
     private ProductMapper productMapper;
@@ -78,6 +80,26 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     public List<OrderInfo> listOrderByCreateTimeDesc() {
         QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<OrderInfo>().orderByDesc("create_time");
         return baseMapper.selectList(queryWrapper);
+    }
+
+    /**
+     * @param orderNo     订单号
+     * @param orderStatus 状态
+     * @Description 根据订单编号更新订单状态
+     * @author itzhouq
+     * @Date 2022/1/16 23:19
+     */
+    @Override
+    public void updateStatusByOrderNo(String orderNo, OrderStatus orderStatus) {
+        log.info("更新订单状态 ===> {}", orderStatus.getType());
+
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setOrderStatus(orderStatus.getType());
+
+        baseMapper.update(orderInfo, queryWrapper);
     }
 
     /**
