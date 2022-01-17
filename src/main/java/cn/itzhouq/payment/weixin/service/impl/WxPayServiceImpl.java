@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -195,6 +196,47 @@ public class WxPayServiceImpl implements WxPayService {
         // 更新商户端的订单状态
         orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.CANCEL);
 
+    }
+
+    /**
+     * @param orderNo 订单号
+     * @return {@link java.lang.String}
+     * @Description 查单接口调用
+     * @author itzhouq
+     * @Date 2022/1/18 07:40
+     */
+    @Override
+    public String queryOrder(String orderNo) throws IOException {
+        log.info("查单接口调用 ===> {}", orderNo);
+
+        String url = String.format(WxApiType.ORDER_QUERY_BY_NO.getType(), orderNo);
+        url = wxPayConfig.getDomain().concat(url).concat("?mchid=").concat(wxPayConfig.getMchId());
+
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("Accept", "application/json");
+
+        // 完成签名并执行请求
+        CloseableHttpResponse response = wxPayClient.execute(httpGet);
+
+        try {
+            String bodyAsString = EntityUtils.toString(response.getEntity());
+            //响应体
+            int statusCode = response.getStatusLine().getStatusCode();
+            //响应状态码
+            if (statusCode == 200) {
+                //处理成功
+                log.info("成功, 返回结果 = " + bodyAsString);
+            } else if (statusCode == 204) {
+                //处理成功，无返回Body
+                log.info("成功");
+            } else {
+                log.info("Native下单失败,响应码 = " + statusCode + ",返回结果 = " + bodyAsString);
+                throw new IOException("request failed");
+            }
+            return bodyAsString;
+        } finally {
+            response.close();
+        }
     }
 
     /**

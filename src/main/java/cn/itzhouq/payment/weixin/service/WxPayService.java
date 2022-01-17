@@ -16,4 +16,6 @@ public interface WxPayService {
     void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException;
 
     void cancelOrder(String orderNo) throws IOException;
+
+    String queryOrder(String orderNo) throws IOException;
 }

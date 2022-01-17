@@ -133,5 +133,14 @@ public class WxPayController {
         return R.ok().setMessage("订单已取消");
     }
 
+    @ApiOperation("查询订单：测试订单状态用")
+    @GetMapping("/query/{orderNo}")
+    public R queryOrder(@PathVariable String orderNo) throws Exception {
+        log.info("查询订单");
+
+        String bodyAsString = wxPayService.queryOrder(orderNo);
+        return R.ok().setMessage("查询成功").data("bodyAsString", bodyAsString);
+    }
+
 
 }
