@@ -113,4 +113,28 @@ public class WxPayConfig {
         return builder.build();
     }
 
+    /**
+     * 获取HttpClient，无需进行应答签名验证，跳过验签的流程
+     */
+    @Bean(name = "wxPayNoSignClient")
+    public CloseableHttpClient getWxPayNoSignClient(){
+
+        //获取商户私钥
+        PrivateKey privateKey = getPrivateKey(privateKeyPath);
+
+        //用于构造HttpClient
+        WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
+                //设置商户信息
+                .withMerchant(mchId, mchSerialNo, privateKey)
+                //无需进行签名验证、通过withValidator((response) -> true)实现
+                .withValidator((response) -> true);
+
+        // 通过WechatPayHttpClientBuilder构造的HttpClient，会自动的处理签名和验签，并进行证书自动更新
+        CloseableHttpClient httpClient = builder.build();
+
+        log.info("== getWxPayNoSignClient END ==");
+
+        return httpClient;
+    }
+
 }

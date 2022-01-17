@@ -98,7 +98,7 @@ public class WxPayController {
             }
 
             log.info("通知验签成功");
-            // TODO 处理订单--密文解密
+            // 处理订单--密文解密
             wxPayService.processOrder(bodyMap);
 
             // 测试超时应答：添加睡眠时间使应答超时

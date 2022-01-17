@@ -96,6 +96,7 @@ public class WxPayServiceImpl implements WxPayService {
         httpPost.setHeader("Accept", "application/json");
         //完成签名并执行请求
         CloseableHttpResponse response = wxPayClient.execute(httpPost);
+
         try {
             //响应体
             String bodyAsString = EntityUtils.toString(response.getEntity());
