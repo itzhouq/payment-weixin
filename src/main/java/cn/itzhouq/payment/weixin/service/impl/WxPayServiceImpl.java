@@ -182,6 +182,66 @@ public class WxPayServiceImpl implements WxPayService {
     }
 
     /**
+     * @param orderNo 订单号
+     * @Description 用户取消订单
+     * @author itzhouq
+     * @Date 2022/1/18 07:23
+     */
+    @Override
+    public void cancelOrder(String orderNo) throws IOException {
+        // 调用微信支付的关单接口
+        this.closeOrder(orderNo);
+
+        // 更新商户端的订单状态
+        orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.CANCEL);
+
+    }
+
+    /**
+     * @param orderNo 订单号
+     * @Description 关单接口的调用
+     * @author itzhouq
+     * @Date 2022/1/18 07:25
+     */
+    private void closeOrder(String orderNo) throws IOException {
+        log.info("关单接口的调用，订单号 ===> {}", orderNo);
+        // 创建远程请求对象
+        String url = String.format(WxApiType.CLOSE_ORDER_BY_NO.getType(), orderNo);
+        url = wxPayConfig.getDomain().concat(url);
+        HttpPost httpPost = new HttpPost(url);
+
+        // 组装JSON请求体
+        Gson gson = new Gson();
+        Map<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("mchid", wxPayConfig.getMchId());
+        String jsonParams = gson.toJson(paramsMap);
+        log.info("请求参数 ===> {}", jsonParams);
+        //将请求参数设置到请求对象中
+        StringEntity entity = new StringEntity(jsonParams, "utf-8");
+        entity.setContentType("application/json");
+        httpPost.setEntity(entity);
+        httpPost.setHeader("Accept", "application/json");
+        // 完成签名并执行请求
+        CloseableHttpResponse response = wxPayClient.execute(httpPost);
+        try {
+            int statusCode = response.getStatusLine().getStatusCode();
+            //响应状态码
+            if (statusCode == 200) {
+                //处理成功
+                log.info("成功200");
+            } else if (statusCode == 204) {
+                //处理成功，无返回Body
+                log.info("成功204");
+            } else {
+                log.info("Native下单失败,响应码 = " + statusCode);
+                throw new IOException("request failed");
+            }
+        } finally {
+            response.close();
+        }
+    }
+
+    /**
      * @param bodyMap 请求体数据
      * @return {@link java.lang.String}
      * @Description 密文解密

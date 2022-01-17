@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -122,6 +123,14 @@ public class WxPayController {
             map.put("message", "系统错误");
             return gson.toJson(map);
         }
+    }
+
+    @ApiOperation("用户取消订单")
+    @PostMapping("/cancel/{orderNo}")
+    public R cancel(@PathVariable("orderNo") String orderNo) throws Exception {
+        log.info("取消订单");
+        wxPayService.cancelOrder(orderNo);
+        return R.ok().setMessage("订单已取消");
     }
 
 
