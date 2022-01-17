@@ -103,6 +103,27 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     }
 
     /**
+     * @param orderNo 订单号
+     * @return {@link java.lang.String}
+     * @Description 根据订单号获取订单状态
+     * @author itzhouq
+     * @Date 2022/1/17 22:57
+     */
+    @Override
+    public String getOrderStatus(String orderNo) {
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+
+        OrderInfo orderInfo = baseMapper.selectOne(queryWrapper);
+        // 防止被删除的订单的回调通知的调用
+        if (orderInfo == null) {
+            return null;
+        }
+        return orderInfo.getOrderStatus();
+
+    }
+
+    /**
      * @param productId 商品ID
      * @return {@link cn.itzhouq.payment.weixin.entity.OrderInfo}
      * @Description 根据商品ID查询未支付订单, 防止重复创建订单

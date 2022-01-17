@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 支付
@@ -102,7 +103,9 @@ public class WxPayController {
             wxPayService.processOrder(bodyMap);
 
             // 测试超时应答：添加睡眠时间使应答超时
-            // TimeUnit.SECONDS.sleep(5);
+            // 设置响应超时，可以接收到微信支付的重复的支付结果通知
+            // 通知重复，数据库会记录多余的处理日志
+//             TimeUnit.SECONDS.sleep(5);
             // 测试错误应答
             // int i = 9 / 0;
 

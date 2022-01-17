@@ -25,6 +25,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 微信支付Service实现类
@@ -47,6 +50,8 @@ public class WxPayServiceImpl implements WxPayService {
 
     @Resource
     private PaymentInfoService paymentInfoService;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * @param productId 商品ID
@@ -146,11 +151,34 @@ public class WxPayServiceImpl implements WxPayService {
         Map<String, Object> plainTextMap = gson.fromJson(plainText, HashMap.class);
         String orderNo = (String) plainTextMap.get("out_trade_no");
 
-        // 更新订单状态
-        orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.SUCCESS);
+        // 在对业务数据进行状态检查和处理之前，要采用数据锁进行并发控制，以避免函数重入造成的数据混乱。
+        // 尝试获取锁
+        // 成功获取则立即返回true，获取失败则立刻返回false，不必一直等待锁的释放
+        if (lock.tryLock()) {
+            try {
+                // 处理重复通知
+                // 保证接口调用的幂等性：无论接口被调用多少次，产生的结果是一致的
+                String orderStatus = orderInfoService.getOrderStatus(orderNo);
+                if (!Objects.equals(OrderStatus.NOTPAY.getType(), orderStatus)) {
+                    return;
+                }
 
-        // 记录支付日志
-        paymentInfoService.createPaymentInfo(plainText);
+                // 模拟通知并发
+//        try {
+//            TimeUnit.SECONDS.sleep(5);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
+                // 更新订单状态
+                orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.SUCCESS);
+
+                // 记录支付日志
+                paymentInfoService.createPaymentInfo(plainText);
+            } finally {
+                lock.unlock();
+            }
+        }
     }
 
     /**
