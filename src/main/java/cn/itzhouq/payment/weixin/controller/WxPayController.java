@@ -212,5 +212,23 @@ public class WxPayController {
         }
     }
 
+    @ApiOperation("获取账单url：测试用")
+    @GetMapping("/querybill/{billDate}/{type}")
+    public R queryTradeBill(@PathVariable String billDate, @PathVariable String type) throws IOException {
+        log.info("获取账单url");
+
+        String downloadUrl = wxPayService.queryBill(billDate, type);
+        return R.ok().setMessage("获取账单url成功").data("downloadUrl", downloadUrl);
+    }
+
+    @ApiOperation("下载账单")
+    @GetMapping("/downloadbill/{billDate}/{type}")
+    public R downloadBill(@PathVariable String billDate, @PathVariable String type) throws IOException {
+        log.info("下载账单");
+
+        String result = wxPayService.downloadBill(billDate, type);
+        return R.ok().data("result", result);
+    }
+
 
 }

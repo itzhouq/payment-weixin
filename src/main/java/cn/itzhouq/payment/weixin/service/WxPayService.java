@@ -30,4 +30,8 @@ public interface WxPayService {
     void checkRefundStatus(String refundNo) throws IOException;
 
     void processRefund(Map<String, Object> bodyMap) throws Exception;
+
+    String queryBill(String billDate, String type) throws IOException;
+
+    String downloadBill(String billDate, String type) throws IOException;
 }
