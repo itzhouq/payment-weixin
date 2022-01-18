@@ -22,4 +22,6 @@ public interface WxPayService {
     void checkOrderStatus(String orderNo) throws IOException;
 
     void refund(String orderNo, String reason) throws IOException;
+
+    String queryRefund(String refundNo) throws IOException;
 }

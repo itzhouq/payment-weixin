@@ -150,4 +150,13 @@ public class WxPayController {
         return R.ok();
     }
 
+    @ApiOperation("查询退款：测试用")
+    @GetMapping("/query-refund/{refundNo}")
+    public R queryRefund(@PathVariable String refundNo) throws IOException {
+        log.info("查询退款");
+
+        String result = wxPayService.queryRefund(refundNo);
+        return R.ok().setMessage("查询成功").data("result", result);
+    }
+
 }
