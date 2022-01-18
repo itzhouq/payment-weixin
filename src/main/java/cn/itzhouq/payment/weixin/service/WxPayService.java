@@ -28,4 +28,6 @@ public interface WxPayService {
     String queryRefund(String refundNo) throws IOException;
 
     void checkRefundStatus(String refundNo) throws IOException;
+
+    void processRefund(Map<String, Object> bodyMap) throws Exception;
 }

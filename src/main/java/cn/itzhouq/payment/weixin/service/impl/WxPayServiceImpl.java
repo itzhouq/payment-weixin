@@ -443,6 +443,43 @@ public class WxPayServiceImpl implements WxPayService {
     }
 
     /**
+     * @param bodyMap 入参
+     * @Description 处理退款单
+     * @author itzhouq
+     * @Date 2022/1/18 16:20
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void processRefund(Map<String, Object> bodyMap) throws Exception {
+        log.info("退款单");
+
+        // 解密报文
+        String plainText = decryptFromResource(bodyMap);
+
+        // 将明文转为map
+        Gson gson = new Gson();
+        HashMap plainTextMap = gson.fromJson(plainText, HashMap.class);
+        String orderNo = (String) plainTextMap.get("out_trade_no");
+
+        if (lock.tryLock()) {
+            try {
+                String orderStatus = orderInfoService.getOrderStatus(orderNo);
+                if (!Objects.equals(OrderStatus.REFUND_PROCESSING.getType(), orderStatus)) {
+                    return;
+                }
+
+                // 更新订单状态
+                orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_SUCCESS);
+                // 更新退款单
+                refundInfoService.updateRefund(plainText);
+            } finally {
+                // 要主动释放锁
+                lock.unlock();
+            }
+        }
+    }
+
+    /**
      * @param orderNo 订单号
      * @Description 关单接口的调用
      * @author itzhouq
