@@ -1,5 +1,7 @@
 package cn.itzhouq.payment.weixin.service;
 
+import cn.itzhouq.payment.weixin.entity.RefundInfo;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
@@ -24,4 +26,6 @@ public interface WxPayService {
     void refund(String orderNo, String reason) throws IOException;
 
     String queryRefund(String refundNo) throws IOException;
+
+    void checkRefundStatus(String refundNo) throws IOException;
 }

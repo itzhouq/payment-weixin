@@ -2,6 +2,7 @@ package cn.itzhouq.payment.weixin.service.impl;
 
 import cn.itzhouq.payment.weixin.entity.OrderInfo;
 import cn.itzhouq.payment.weixin.entity.RefundInfo;
+import cn.itzhouq.payment.weixin.enums.wxpay.WxRefundStatus;
 import cn.itzhouq.payment.weixin.mapper.RefundInfoMapper;
 import cn.itzhouq.payment.weixin.service.OrderInfoService;
 import cn.itzhouq.payment.weixin.service.RefundInfoService;
@@ -12,7 +13,10 @@ import com.google.gson.Gson;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -50,8 +54,8 @@ public class RefundInfoServiceImpl extends ServiceImpl<RefundInfoMapper, RefundI
     }
 
     /**
-     * @Description 记录退款记录
      * @param content 内容
+     * @Description 记录退款记录
      * @author itzhouq
      * @Date 2022/1/18 14:16
      */
@@ -87,5 +91,22 @@ public class RefundInfoServiceImpl extends ServiceImpl<RefundInfoMapper, RefundI
 
         // 更新退款单
         baseMapper.update(refundInfo, queryWrapper);
+    }
+
+    /**
+     * @param minutes 时间
+     * @return {@link java.util.List<cn.itzhouq.payment.weixin.entity.RefundInfo>}
+     * @Description 找出申请退款超过minutes分钟并且未成功的退款单
+     * @author itzhouq
+     * @Date 2022/1/18 15:48
+     */
+    @Override
+    public List<RefundInfo> getNoRefundOrderByDuration(int minutes) {
+        Instant instant = Instant.now().minus(Duration.ofMillis(minutes));
+
+        QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("refund_status", WxRefundStatus.PROCESSING.getType());
+        queryWrapper.le("create_time", instant);
+        return baseMapper.selectList(queryWrapper);
     }
 }

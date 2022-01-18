@@ -1,7 +1,9 @@
 package cn.itzhouq.payment.weixin.task;
 
 import cn.itzhouq.payment.weixin.entity.OrderInfo;
+import cn.itzhouq.payment.weixin.entity.RefundInfo;
 import cn.itzhouq.payment.weixin.service.OrderInfoService;
+import cn.itzhouq.payment.weixin.service.RefundInfoService;
 import cn.itzhouq.payment.weixin.service.WxPayService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +28,9 @@ public class WxPayTask {
 
     @Resource
     private OrderInfoService orderInfoService;
+
+    @Resource
+    private RefundInfoService refundInfoService;
 
     /**
      * 测试
@@ -58,6 +63,21 @@ public class WxPayTask {
 
             // 核实订单状态：调用微信支付查单接口
             wxPayService.checkOrderStatus(orderNo);
+        }
+    }
+
+    @Scheduled(cron = "0/30 * * * * ?")
+    public void refundConfirm() throws IOException {
+        log.info("refundConfirm被执行......");
+
+        // 找出申请退款超过5分钟并且未成功的退款单
+        List<RefundInfo> refundInfoList = refundInfoService.getNoRefundOrderByDuration(5);
+        for (RefundInfo refundInfo : refundInfoList) {
+            String refundNo = refundInfo.getRefundNo();
+            log.warn("超时未退款的退款单号 ====> {}", refundNo);
+
+            // 核实订单状态：调用微信支付查询退款接口
+            wxPayService.checkRefundStatus(refundNo);
         }
     }
 }
