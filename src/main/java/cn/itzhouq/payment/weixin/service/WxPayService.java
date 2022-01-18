@@ -18,4 +18,6 @@ public interface WxPayService {
     void cancelOrder(String orderNo) throws IOException;
 
     String queryOrder(String orderNo) throws IOException;
+
+    void checkOrderStatus(String orderNo) throws IOException;
 }
