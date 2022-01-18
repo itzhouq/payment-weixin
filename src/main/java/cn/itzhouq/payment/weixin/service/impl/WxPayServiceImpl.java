@@ -2,12 +2,14 @@ package cn.itzhouq.payment.weixin.service.impl;
 
 import cn.itzhouq.payment.weixin.config.WxPayConfig;
 import cn.itzhouq.payment.weixin.entity.OrderInfo;
+import cn.itzhouq.payment.weixin.entity.RefundInfo;
 import cn.itzhouq.payment.weixin.enums.OrderStatus;
 import cn.itzhouq.payment.weixin.enums.wxpay.WxApiType;
 import cn.itzhouq.payment.weixin.enums.wxpay.WxNotifyType;
 import cn.itzhouq.payment.weixin.enums.wxpay.WxTradeState;
 import cn.itzhouq.payment.weixin.service.OrderInfoService;
 import cn.itzhouq.payment.weixin.service.PaymentInfoService;
+import cn.itzhouq.payment.weixin.service.RefundInfoService;
 import cn.itzhouq.payment.weixin.service.WxPayService;
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
@@ -19,6 +21,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -28,7 +31,6 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -54,6 +56,9 @@ public class WxPayServiceImpl implements WxPayService {
     private PaymentInfoService paymentInfoService;
 
     private final ReentrantLock lock = new ReentrantLock();
+
+    @Resource
+    private RefundInfoService refundInfoService;
 
     /**
      * @param productId 商品ID
@@ -280,6 +285,86 @@ public class WxPayServiceImpl implements WxPayService {
             // 更新本地订单状态
             orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.CLOSED);
         }
+    }
+
+    /**
+     * @Description 退款
+     * @param orderNo 订单号
+     * @param reason 退款原因
+     * @author itzhouq
+     * @Date 2022/1/18 14:20
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void refund(String orderNo, String reason) throws IOException {
+        log.info("创建退款单记录");
+        // 根据订单编号创建退款单
+        RefundInfo refundInfo = refundInfoService.createRefundByOrderNo(orderNo, reason);
+
+        log.info("调用退款API");
+
+        // 调用统一下单API
+        String url = wxPayConfig.getDomain().concat(WxApiType.DOMESTIC_REFUNDS.getType());
+        HttpPost httpPost = new HttpPost(url);
+
+        // 请求body参数
+        Gson gson = new Gson();
+        Map paramsMap = new HashMap();
+        // 订单编号
+        paramsMap.put("out_trade_no", orderNo);
+        // 退款单编号
+        paramsMap.put("out_refund_no", refundInfo.getRefundNo());
+        paramsMap.put("reason", reason);
+        // 退款通知地址
+        paramsMap.put("notify_url", wxPayConfig.getNotifyDomain().concat(WxNotifyType.REFUND_NOTIFY.getType()));
+
+        Map amountMap = new HashMap();
+        // 退款金额
+        amountMap.put("refund", refundInfo.getRefund());
+        amountMap.put("total", refundInfo.getTotalFee());
+        // 退款币种
+        amountMap.put("currency", "CNY");
+        paramsMap.put("amount", amountMap);
+
+        // 将参数转换为JSON字符串
+        String jsonParams = gson.toJson(paramsMap);
+        log.info("请求参数 ===> {}", paramsMap);
+
+        StringEntity entity = new StringEntity(jsonParams, "utf-8");
+        // 设置请求报文格式
+        entity.setContentType("application/json");
+        // 将请求报文放入请求对象
+        httpPost.setEntity(entity);
+        // 设置响应报文格式
+        httpPost.setHeader("Accept", "application/json");
+
+        // 完成签名并执行请求，并完成验签
+        CloseableHttpResponse response = wxPayClient.execute(httpPost);
+
+        try {
+            // 解析响应结果
+            String bodyAsString = EntityUtils.toString(response.getEntity());
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                log.info("成功，退款返回结果 =" + bodyAsString);
+            } else if (statusCode == 204) {
+                log.info("成功");
+            } else {
+                throw new RuntimeException("退款异常，响应码 = " + statusCode + ", 退款返回结果 = " + bodyAsString);
+            }
+
+            // 更新订单状态
+            orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_PROCESSING);
+
+            // 更新退款单
+            refundInfoService.updateRefund(bodyAsString);
+        } finally {
+            response.close();
+        }
+
+
+
+
     }
 
     /**

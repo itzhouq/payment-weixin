@@ -143,6 +143,21 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     }
 
     /**
+     * @param orderNo 订单号
+     * @return {@link cn.itzhouq.payment.weixin.entity.OrderInfo}
+     * @Description 根据订单号获取订单
+     * @author itzhouq
+     * @Date 2022/1/18 14:08
+     */
+    @Override
+    public OrderInfo getOrderInfoByOrderNo(String orderNo) {
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+
+        return baseMapper.selectOne(queryWrapper);
+    }
+
+    /**
      * @param productId 商品ID
      * @return {@link cn.itzhouq.payment.weixin.entity.OrderInfo}
      * @Description 根据商品ID查询未支付订单, 防止重复创建订单
